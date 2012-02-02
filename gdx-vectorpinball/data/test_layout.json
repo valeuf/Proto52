@@ -31,7 +31,10 @@
 			{"class": "WallElement", "position": [0, 30, 20, 30]},
 			
 			"Ramp to bring back ball to the elevator",
-			{"class": "WallElement", "position": [4, 0, 17, 2]}
+			{"class": "WallElement", "position": [4, 0, 17, 2]},
+			
+			"The elevator",
+			{"class": "ElevatorElement", "position": [2, 2, 2, 18], "nb_paddle": 1, "speed": 1}
 			
 		],
 		          
