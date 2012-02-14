@@ -8,8 +8,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.badlogic.gdx.physics.box2d.joints.RevoluteJoint;
+import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
 import com.badlogic.gdx.physics.box2d.World;
+import com.dozingcatsoftware.bouncy.Field;
 import com.dozingcatsoftware.bouncy.IFieldRenderer;
 
 /** Elevator are a system to lift up ball at the top of the field.
@@ -33,24 +42,85 @@ public class ElevatorElement extends FieldElement {
 		//Middle position(bad to use cryptic name)
 		float mx, my;
 		
-		//Position of the paddle (bad to use cryptic name)
-		float px1, px2, py1, py2;
+		//Length of the paddle
+		float length;
 		
-		public Paddle(float mx, float my, World world){
+		//Position of the elevator (to determine the movement
+		float top, down;
+		
+		//Pseudo-state machine
+		boolean goingUp;
+		boolean rotating;
+		
+		public Paddle(float mx, float my, float length, World world, boolean goingUp, float down, float top){
 			this.mx = mx;
 			this.my = my;
 			
-			this.px1 = mx;
-			this.py1 = my;
-			this.px2 = mx+1;
-			this.py2 = my;
+
+			PolygonShape wallshape = new PolygonShape();
+			Vector2 v = new Vector2(1.0f, 0.0f);
+			wallshape.setAsBox(1.0f, 0.05f, v, 0.0f);
+			BodyDef bd = new BodyDef();
+			bd.position.set(mx, my);
+			this.paddleBody = world.createBody(bd);
+			paddleBody.createFixture(wallshape, 0.5f);
+			paddleBody.setType(BodyType.KinematicBody);
+
+			this.goingUp = goingUp;
+			this.rotating = false;
+			if (goingUp)
+				paddleBody.setLinearVelocity(0.0f, 1.0f);
+			else
+				paddleBody.setLinearVelocity(0.0f, -1.0f);
 			
-			paddleBody = Box2DFactory.createThinWall(world, px1, py1, px2, py2, 0.5f);
+			this.top = top;
+			this.down = down;
+			this.length = length;
+		}
+		
+		public void tick(){
+			//If it goes up and does not rotate yet and should rotate
+			if(this.goingUp && !(rotating) && paddleBody.getPosition().y >= this.top){
+				this.rotating=true;
+				paddleBody.setAngularVelocity((float) -3.14/4);
+				paddleBody.setLinearVelocity(0.0f, 0.0f);
+			}
+			else if(this.goingUp && rotating && paddleBody.getAngle()<=-3.14/2){
+				paddleBody.setAngularVelocity((float) 3.14/4);
+			}
+			//If it was going up and rotated 180 degree, it should go down
+			else if(this.goingUp && rotating && paddleBody.getAngle()>=3.14){
+				this.rotating=false;
+				this.goingUp=false;
+				paddleBody.setAngularVelocity(0.0f);
+				paddleBody.setLinearVelocity(0.0f, -1.0f);
+			}
+			//If it goes down and does not rotate yet and should rotate
+			else if(!this.goingUp && !(rotating) && paddleBody.getPosition().y <= this.down){
+				this.rotating=true;
+				paddleBody.setAngularVelocity((float) 3.14/4);
+				paddleBody.setLinearVelocity(0.0f, 0.0f);
+			}
 			
+			//If it was going down and rotated 180 degree, it should go up
+			else if(!this.goingUp && rotating && paddleBody.getAngle()>=2*3.14){
+				this.rotating=false;
+				this.goingUp=true;
+				paddleBody.setAngularVelocity(0.0f);
+				paddleBody.setTransform(paddleBody.getPosition().x, paddleBody.getPosition().y, 0.0f);
+				paddleBody.setLinearVelocity(0.0f, 1.0f);
+			}
 		}
 		
 		public void draw(IFieldRenderer renderer){
-			renderer.drawLine(px1, py1, px2, py2, redColorComponent(DEFAULT_WALL_RED), greenColorComponent(DEFAULT_WALL_GREEN),
+			// draw single line segment from anchor point
+			Vector2 position = paddleBody.getPosition();
+			float angle = paddleBody.getAngle();
+			float x1 = position.x;
+			float y1 = position.y;
+			float x2 = (position.x + length * (float)Math.cos(angle));
+			float y2 = position.y + length * (float)Math.sin(angle);
+			renderer.drawLine(x1, y1, x2, y2, redColorComponent(DEFAULT_WALL_RED), greenColorComponent(DEFAULT_WALL_GREEN),
 					blueColorComponent(DEFAULT_WALL_BLUE));
 		}
 		
@@ -80,7 +150,8 @@ public class ElevatorElement extends FieldElement {
 		structureBody = Box2DFactory.createThinWall(world, x1, y1, x2, y2, 0.5f);
 		bodyList.add(structureBody);
 		
-		paddleList.add(new Paddle(x1, (y1+y2)/2,world));
+		//Check Top and Down
+		paddleList.add(new Paddle(x1, (y1+y2)/2, 1.0f, world, true, y1, y2));
 	}
 
 	@Override
@@ -94,6 +165,13 @@ public class ElevatorElement extends FieldElement {
 		return true;
 	}
 
+	@Override
+	public void tick (Field field) {
+		//We will tick each paddle
+		for (Paddle p : paddleList){
+			p.tick();
+		}
+	}
 
 	@Override
 	public void draw(IFieldRenderer renderer) {
