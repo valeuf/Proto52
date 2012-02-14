@@ -72,12 +72,16 @@ public class Box2DFactory {
 
 	/** Creates a segment-like thin wall with 0.05 thickness going from (x1,y1) to (x2,y2) */
 	public static Body createThinWall (World world, float x1, float y1, float x2, float y2, float restitution) {
+		return createThinWall (world, x1, y1, x2, y2, restitution, 0.05f);
+	}
+	
+	/**Creates a segment-like thin wall with user-defined thickness */
+	public static Body createThinWall (World world, float x1, float y1, float x2, float y2, float restitution, float thickness){
 		// determine center point and rotation angle for createWall
 		float cx = (x1 + x2) / 2;
 		float cy = (y1 + y2) / 2;
 		float angle = (float)Math.atan2(y2 - y1, x2 - x1);
 		float mag = (float)Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-		return createWall(world, cx - mag / 2, cy - 0.05f, cx + mag / 2, cy + 0.05f, angle, restitution);
+		return createWall(world, cx - mag / 2, cy - thickness, cx + mag / 2, cy + thickness, angle, restitution);
 	}
-
 }
