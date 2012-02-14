@@ -58,20 +58,27 @@ public class ElevatorElement extends FieldElement {
 			
 
 			PolygonShape wallshape = new PolygonShape();
-			Vector2 v = new Vector2(1.0f, 0.0f);
-			wallshape.setAsBox(1.0f, 0.05f, v, 0.0f);
+			Vector2 v = new Vector2(0.5f, 0.0f);
+			wallshape.setAsBox(0.5f, 0.05f, v, 0.0f);
+			for(int i=0; i<wallshape.getVertexCount();i++){
+				wallshape.getVertex(i, v);
+				Gdx.app.log("V"+i+":", v.toString());
+			}
 			BodyDef bd = new BodyDef();
-			bd.position.set(mx, my);
+			bd.position.set(this.mx, this.my);
 			this.paddleBody = world.createBody(bd);
 			paddleBody.createFixture(wallshape, 0.5f);
 			paddleBody.setType(BodyType.KinematicBody);
+			if (!goingUp)
+				paddleBody.setTransform(this.mx, this.my, 3.14f);
+			
 
 			this.goingUp = goingUp;
 			this.rotating = false;
 			if (goingUp)
-				paddleBody.setLinearVelocity(0.0f, 1.0f);
+				paddleBody.setLinearVelocity(0.0f, 1.2f);
 			else
-				paddleBody.setLinearVelocity(0.0f, -1.0f);
+				paddleBody.setLinearVelocity(0.0f, -1.2f);
 			
 			this.top = top;
 			this.down = down;
@@ -82,23 +89,23 @@ public class ElevatorElement extends FieldElement {
 			//If it goes up and does not rotate yet and should rotate
 			if(this.goingUp && !(rotating) && paddleBody.getPosition().y >= this.top){
 				this.rotating=true;
-				paddleBody.setAngularVelocity((float) -3.14/4);
+				paddleBody.setAngularVelocity((float) -3.14/2);
 				paddleBody.setLinearVelocity(0.0f, 0.0f);
 			}
 			else if(this.goingUp && rotating && paddleBody.getAngle()<=-3.14/2){
-				paddleBody.setAngularVelocity((float) 3.14/4);
+				paddleBody.setAngularVelocity((float) 3.14/2);
 			}
 			//If it was going up and rotated 180 degree, it should go down
 			else if(this.goingUp && rotating && paddleBody.getAngle()>=3.14){
 				this.rotating=false;
 				this.goingUp=false;
 				paddleBody.setAngularVelocity(0.0f);
-				paddleBody.setLinearVelocity(0.0f, -1.0f);
+				paddleBody.setLinearVelocity(0.0f, -1.2f);
 			}
 			//If it goes down and does not rotate yet and should rotate
 			else if(!this.goingUp && !(rotating) && paddleBody.getPosition().y <= this.down){
 				this.rotating=true;
-				paddleBody.setAngularVelocity((float) 3.14/4);
+				paddleBody.setAngularVelocity((float) 3.14/2);
 				paddleBody.setLinearVelocity(0.0f, 0.0f);
 			}
 			
@@ -108,7 +115,7 @@ public class ElevatorElement extends FieldElement {
 				this.goingUp=true;
 				paddleBody.setAngularVelocity(0.0f);
 				paddleBody.setTransform(paddleBody.getPosition().x, paddleBody.getPosition().y, 0.0f);
-				paddleBody.setLinearVelocity(0.0f, 1.0f);
+				paddleBody.setLinearVelocity(0.0f, 1.2f);
 			}
 		}
 		
@@ -150,8 +157,15 @@ public class ElevatorElement extends FieldElement {
 		structureBody = Box2DFactory.createThinWall(world, x1, y1, x2, y2, 0.5f);
 		bodyList.add(structureBody);
 		
-		//Check Top and Down
-		paddleList.add(new Paddle(x1, (y1+y2)/2, 1.0f, world, true, y1, y2));
+		//Dispatch paddle every 5
+		//First find the number of paddle
+		int nbPaddle= (int) Math.floor((y2-y1)/5.0);
+		for(int i=1;i<nbPaddle;i++){
+			paddleList.add(new Paddle(x1, y1+i*5, 1.0f, world, true, y1, y2));
+			paddleList.add(new Paddle(x1, y1+i*5, 1.0f, world, false, y1, y2));
+		}
+		paddleList.add(new Paddle(x1, y1, 1.0f, world, true, y1, y2));
+		paddleList.add(new Paddle(x1, y1+nbPaddle*5, 1.0f, world, false, y1, y2));
 	}
 
 	@Override
