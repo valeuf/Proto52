@@ -9,9 +9,9 @@
 		"gravity": 4.0,
 		
 		"numballs": 1,
-		"ballradius": 0.5,
+		"ballradius": 0.3,
 		"ballcolor": [192, 192, 224],
-		"launch": {"position": [4, 5], "velocity": [0, 0], "random_velocity": [0, 0]},
+		"launch": {"position": [5, 5], "velocity": [0, 0], "random_velocity": [0, 0]},
 		
 		"elements": [
 			"Strings in this section are treated as comments and ignored.",
@@ -31,30 +31,15 @@
 			{"class": "WallElement", "position": [0, 30, 20, 30]},
 			
 			"Ramp to bring back ball to the elevator",
-			{"class": "WallElement", "position": [4, 0, 17, 2]},
+			{"class": "WallElement", "position": [2, 1, 15, 3]},
+			
+			"Structure of the level",
+			{"class": "WallElement", "position": [3, 17, 18, 15]},
+			{"class": "WallElement", "position": [20, 14, 3, 12]},
 			
 			"The elevator",
-			{"class": "ElevatorElement", "position": [2, 2, 2, 18], "nb_paddle": 1, "speed": 1}
+			{"class": "ElevatorElement", "position": [2, 0, 2, 18], "nb_paddle": 1, "speed": 1}
 			
-		],
-		          
-        "flippers": [
-        	{
-        		"position": [6.35, 12.2],
-        		"length": 2.5,
-        		"minangle": -20,
-        		"maxangle": 20,
-        		"upspeed": 7,
-        		"downspeed": 3
-        	},
-        	{
-        		"position": [12.35, 12.2],
-        		"length": -2.5,
-        		"minangle": -20,
-        		"maxangle": 20,
-        		"upspeed": 7,
-        		"downspeed": 3
-        	}
-        ]
+		]
 	}	
 ]
